@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2113.65">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+    p.p3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px 'PingFang TC'}
+    span.s1 {font: 12.0px 'PingFang TC'}
+    span.s2 {font: 12.0px Helvetica}
+    span.s3 {font: 12.0px 'Apple Color Emoji'}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="zh-Hant"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;meta charset="UTF-8" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;title&gt;<span class="s1">收據上傳辨識器（</span>n8n Webhook <span class="s1">版）</span>&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>body {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>font-family: sans-serif;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>text-align: center;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>padding: 2em;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>#drop-area {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>border: 2px dashed #ccc;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>padding: 2em;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>cursor: pointer;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin-bottom: 1em;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>#result {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>margin-top: 1em;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>white-space: pre-wrap;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>color: #333;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;h2&gt;<span class="s1">收據圖片上傳（</span>n8n Webhook<span class="s1">）</span>&lt;/h2&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="drop-area"&gt;</p>
+<p class="p3"><span class="s2"><span class="Apple-converted-space">    </span></span><span class="s3">📷</span><span class="s2"> </span>點擊或拖曳圖片上傳</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;input type="file" id="fileElem" accept="image/*" style="display:none" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;button id="uploadBtn"&gt;<span class="s3">🚀</span> <span class="s1">上傳辨識</span>&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="result"&gt;&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const token = "Boos58609225**";</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const webhookUrl = "https://guruguru.app.n8n.cloud/webhook-test/upload-receipt";</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const dropArea = document.getElementById("drop-area");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const fileElem = document.getElementById("fileElem");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const uploadBtn = document.getElementById("uploadBtn");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let selectedFile = null;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>dropArea.addEventListener("click", () =&gt; fileElem.click());</p>
+<p class="p1"><span class="Apple-converted-space">    </span>fileElem.addEventListener("change", handleFiles);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>function handleFiles() {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>selectedFile = this.files[0];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>dropArea.innerText = `<span class="s3">✅</span> <span class="s1">已選擇檔案：</span>${selectedFile.name}`;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>uploadBtn.addEventListener("click", () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if (!selectedFile) return alert("<span class="s1">請先選擇圖片！</span>");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const reader = new FileReader();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>reader.onload = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const imageBase64 = reader.result;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>fetch(webhookUrl, {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>method: "POST",</p>
+<p class="p1"><span class="Apple-converted-space">          </span>headers: {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>"Content-Type": "application/json"</p>
+<p class="p1"><span class="Apple-converted-space">          </span>},</p>
+<p class="p1"><span class="Apple-converted-space">          </span>body: JSON.stringify({</p>
+<p class="p1"><span class="Apple-converted-space">            </span>token,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>imageBase64</p>
+<p class="p1"><span class="Apple-converted-space">          </span>})</p>
+<p class="p1"><span class="Apple-converted-space">        </span>})</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.then(res =&gt; res.json())</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.then(data =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>document.getElementById("result").innerText =</p>
+<p class="p1"><span class="Apple-converted-space">            </span>data.status === "success"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>? "<span class="s3">✅</span> <span class="s1">成功辨識並寫入</span> Google Sheets"</p>
+<p class="p1"><span class="Apple-converted-space">              </span>: "<span class="s3">❌</span> <span class="s1">失敗：</span>" + data.message;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>})</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.catch(err =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">          </span>document.getElementById("result").innerText = "<span class="s3">❌</span> <span class="s1">錯誤：</span>" + err.message;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>reader.readAsDataURL(selectedFile);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
