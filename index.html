@@ -1,33 +1,31 @@
-
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>收據上傳辨識工具</title>
   <style>
-    body { font-family: sans-serif; padding: 2rem; background: #f9f9f9; }
-    h1 { color: #333; }
+    body { font-family: Arial, sans-serif; padding: 2em; }
     .success { color: green; }
-    .error { color: red; white-space: pre-wrap; }
+    .error { color: red; }
   </style>
 </head>
 <body>
-  <h1>📄 收據上傳辨識工具</h1>
-  <input type="file" id="fileInput" accept="image/*" />
-  <br /><br />
+  <h2>📄 收據上傳辨識工具</h2>
+  <input type="file" id="fileInput" />
   <button onclick="upload()">📤 上傳辨識</button>
   <p id="result"></p>
 
   <script>
     async function upload() {
-      const fileInput = document.getElementById("fileInput");
-      const result = document.getElementById("result");
-      if (!fileInput.files.length) return alert("請先選擇圖片");
+      const file = document.getElementById("fileInput").files[0];
+      if (!file) return alert("請選擇檔案！");
 
       const formData = new FormData();
-      formData.append("file", fileInput.files[0]);
-      formData.append("token", "MY_SECURE_TOKEN_Boos58609225*");
+      formData.append("file", file);
+      formData.append("token", "Boos58609225**");
+
+      const resEl = document.getElementById("result");
+      resEl.innerHTML = "⏳ 上傳中…";
 
       try {
         const res = await fetch("https://guruguru.app.n8n.cloud/webhook/upload-receipt", {
@@ -35,16 +33,17 @@
           body: formData
         });
 
-        const json = await res.json();
+        const result = await res.json();
         if (res.ok) {
-          result.innerHTML = "✅ 上傳成功，回應：" + JSON.stringify(json);
-          result.className = "success";
+          resEl.innerHTML = "✅ 已寫入表單！<br>" + JSON.stringify(result);
+          resEl.className = "success";
         } else {
-          throw new Error(JSON.stringify(json));
+          resEl.innerHTML = "❌ 錯誤：" + JSON.stringify(result);
+          resEl.className = "error";
         }
       } catch (err) {
-        result.innerHTML = "❌ 錯誤：無法連線或上傳失敗\n" + err.message;
-        result.className = "error";
+        resEl.innerHTML = "❌ 無法連線或上傳失敗<br>" + err;
+        resEl.className = "error";
       }
     }
   </script>
