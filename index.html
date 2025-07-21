@@ -1,50 +1,61 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>收據上傳辨識工具</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 2em; }
+    body { font-family: "Microsoft JhengHei", sans-serif; padding: 2em; }
     .success { color: green; }
     .error { color: red; }
   </style>
 </head>
 <body>
-  <h2>📄 收據上傳辨識工具</h2>
+  <h1>📄 收據上傳辨識工具</h1>
   <input type="file" id="fileInput" />
   <button onclick="upload()">📤 上傳辨識</button>
   <p id="result"></p>
 
   <script>
     async function upload() {
-      const file = document.getElementById("fileInput").files[0];
-      if (!file) return alert("請選擇檔案！");
-
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("token", "Boos58609225**");
-
-      const resEl = document.getElementById("result");
-      resEl.innerHTML = "⏳ 上傳中…";
-
-      try {
-        const res = await fetch("https://guruguru.app.n8n.cloud/webhook/upload-receipt", {
-          method: "POST",
-          body: formData
-        });
-
-        const result = await res.json();
-        if (res.ok) {
-          resEl.innerHTML = "✅ 已寫入表單！<br>" + JSON.stringify(result);
-          resEl.className = "success";
-        } else {
-          resEl.innerHTML = "❌ 錯誤：" + JSON.stringify(result);
-          resEl.className = "error";
-        }
-      } catch (err) {
-        resEl.innerHTML = "❌ 無法連線或上傳失敗<br>" + err;
-        resEl.className = "error";
+      const fileInput = document.getElementById('fileInput');
+      const result = document.getElementById('result');
+      if (!fileInput.files.length) {
+        result.textContent = '請選擇檔案';
+        result.className = 'error';
+        return;
       }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = async function () {
+        try {
+          const base64Data = reader.result.split(',')[1];
+          const response = await fetch("https://guruguru.app.n8n.cloud/webhook/upload-receipt", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              token: "MY_SECURE_TOKEN_Boos58609225*",
+              fileName: file.name,
+              fileData: base64Data
+            }),
+          });
+
+          const json = await response.json();
+          if (response.ok) {
+            result.innerHTML = `✅ 上傳成功，回應：<code>${JSON.stringify(json)}</code>`;
+            result.className = 'success';
+          } else {
+            result.innerHTML = `❌ 錯誤：${JSON.stringify(json)}`;
+            result.className = 'error';
+          }
+        } catch (error) {
+          result.textContent = '❌ 錯誤：無法連線或上傳失敗\n' + error;
+          result.className = 'error';
+        }
+      };
+
+      reader.readAsDataURL(file);
     }
   </script>
 </body>
