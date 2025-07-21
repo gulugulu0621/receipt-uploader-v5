@@ -2,57 +2,65 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>收據上傳工具</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 2rem; background: #f4f4f4; }
-    h1 { color: #333; }
-    input, button { padding: 0.5rem; margin: 0.5rem 0; }
-    #result { margin-top: 1rem; white-space: pre-wrap; background: #fff; padding: 1rem; border: 1px solid #ccc; }
-  </style>
+  <title>收據上傳辨識工具</title>
 </head>
 <body>
-  <h1>🧾 收據上傳辨識工具</h1>
+  <h2>📄 收據上傳辨識工具</h2>
+
   <input type="file" id="fileInput" accept="image/*" />
-  <br />
-  <button onclick="upload()">🚀 上傳辨識</button>
-  <div id="result">請上傳圖片開始辨識。</div>
+  <br><br>
+
+  <button onclick="uploadImage()">📤 上傳辨識</button>
+  <p id="result" style="color: red;"></p>
 
   <script>
-    const webhookUrl = "https://guruguru.app.n8n.cloud/webhook/upload-receipt-ocr"; // 使用正式 URL
-    const token = "Boos58609225**";
+    const webhookUrl = 'https://guruguru.app.n8n.cloud/webhook-test/upload-receipt';
+    const token = 'Boos58609225**';
 
-    async function upload() {
+    async function uploadImage() {
       const fileInput = document.getElementById('fileInput');
-      const resultDiv = document.getElementById('result');
+      const result = document.getElementById('result');
+      const file = fileInput.files[0];
 
-      if (!fileInput.files.length) {
-        resultDiv.textContent = "⚠️ 請先選擇一張圖片。";
+      if (!file) {
+        result.textContent = '❗️請選擇圖片';
         return;
       }
 
-      const file = fileInput.files[0];
-      resultDiv.textContent = "⏳ 上傳中，請稍候...";
+      const reader = new FileReader();
+      reader.onloadend = async function () {
+        const base64Image = reader.result.split(',')[1]; // 移除 data:image/...;base64, 前綴
 
-      try {
-        const formData = new FormData();
-        formData.append("token", token);
-        formData.append("image", file);
+        const data = {
+          token: token,
+          filename: file.name,
+          imageBase64: base64Image
+        };
 
-        const response = await fetch(webhookUrl, {
-          method: "POST",
-          body: formData
-        });
+        try {
+          const res = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+          });
 
-        const data = await response.json();
-        if (data.status === "success") {
-          resultDiv.textContent = "✅ 成功辨識！\n" + JSON.stringify(data, null, 2);
-        } else {
-          resultDiv.textContent = "❌ 辨識失敗：\n" + (data.message || JSON.stringify(data));
+          const resText = await res.text();
+          if (res.ok) {
+            result.style.color = 'green';
+            result.textContent = '✅ 上傳成功，回應：' + resText;
+          } else {
+            result.style.color = 'red';
+            result.textContent = '❌ 錯誤：' + res.status + ' - ' + resText;
+          }
+        } catch (err) {
+          result.style.color = 'red';
+          result.textContent = '❌ 錯誤：無法連線或上傳失敗\n' + err;
         }
-      } catch (error) {
-        resultDiv.textContent = "❌ 錯誤：無法連線或上傳失敗\n" + error.message;
-      }
+      };
+
+      reader.readAsDataURL(file);
     }
   </script>
 </body>
