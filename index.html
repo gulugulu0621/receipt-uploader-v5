@@ -19,7 +19,7 @@
   <div id="result">請上傳圖片開始辨識。</div>
 
   <script>
-    const webhookUrl = "https://guruguru.app.n8n.cloud/webhook-test/upload-receipt";
+    const webhookUrl = "https://guruguru.app.n8n.cloud/webhook/upload-receipt"; // 使用正式 URL
     const token = "Boos58609225**";
 
     async function upload() {
@@ -32,29 +32,27 @@
       }
 
       const file = fileInput.files[0];
-      const reader = new FileReader();
-      reader.onload = async function () {
-        const base64Image = reader.result;
-        resultDiv.textContent = "⏳ 上傳中，請稍候...";
+      resultDiv.textContent = "⏳ 上傳中，請稍候...";
 
-        try {
-          const response = await fetch(webhookUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ imageBase64: base64Image, token })
-          });
+      try {
+        const formData = new FormData();
+        formData.append("token", token);
+        formData.append("image", file);
 
-          const data = await response.json();
-          if (data.status === "success") {
-            resultDiv.textContent = "✅ 成功辨識！\n" + JSON.stringify(data, null, 2);
-          } else {
-            resultDiv.textContent = "❌ 辨識失敗：\n" + data.message;
-          }
-        } catch (error) {
-          resultDiv.textContent = "❌ 錯誤：無法連線或上傳失敗";
+        const response = await fetch(webhookUrl, {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+        if (data.status === "success") {
+          resultDiv.textContent = "✅ 成功辨識！\n" + JSON.stringify(data, null, 2);
+        } else {
+          resultDiv.textContent = "❌ 辨識失敗：\n" + (data.message || JSON.stringify(data));
         }
-      };
-      reader.readAsDataURL(file);
+      } catch (error) {
+        resultDiv.textContent = "❌ 錯誤：無法連線或上傳失敗\n" + error.message;
+      }
     }
   </script>
 </body>
