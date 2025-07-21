@@ -3,49 +3,51 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>收據上傳辨識工具</title>
+  <title>收據上傳工具</title>
   <style>
-    body { font-family: "Microsoft JhengHei", sans-serif; padding: 2em; }
-    .success { color: green; font-weight: bold; }
-    .error { color: red; font-weight: bold; }
+    body { font-family: "Microsoft JhengHei", sans-serif; padding: 2rem; }
+    .success { color: green; }
+    .error { color: red; }
   </style>
 </head>
 <body>
   <h1>🧾 收據上傳辨識工具</h1>
   <input type="file" id="fileInput" />
-  <button onclick="uploadFile()">📤 上傳辨識</button>
-  <p id="statusMsg"></p>
+  <button onclick="upload()">📤 上傳辨識</button>
+  <pre id="result">請選擇圖片上傳</pre>
 
   <script>
-    async function uploadFile() {
+    async function upload() {
       const fileInput = document.getElementById("fileInput");
-      const statusMsg = document.getElementById("statusMsg");
+      const result = document.getElementById("result");
+
       if (!fileInput.files.length) {
-        statusMsg.innerHTML = "❗ 請先選擇圖片檔案。";
-        statusMsg.className = "error";
+        result.textContent = "⚠️ 請選擇圖片檔案";
+        result.className = "error";
         return;
       }
 
-      const file = fileInput.files[0];
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", fileInput.files[0]);
 
       try {
         const res = await fetch("https://guruguru.app.n8n.cloud/webhook/upload-receipt", {
           method: "POST",
-          headers: {
-            "X-TOKEN": "MY_SECURE_TOKEN_Boos58609225*"
-          },
+          headers: { "X-TOKEN": "MY_SECURE_TOKEN_Boos58609225*" },
           body: formData
         });
 
-        if (!res.ok) throw new Error("回傳錯誤：" + res.status);
-        const result = await res.json();
-        statusMsg.innerHTML = `✅ 上傳成功，回應：${JSON.stringify(result)}`;
-        statusMsg.className = "success";
-      } catch (error) {
-        statusMsg.innerHTML = `❌ 錯誤：${error.message}`;
-        statusMsg.className = "error";
+        const data = await res.json();
+        if (res.ok) {
+          result.textContent = "✅ 上傳成功！回應如下：\n" + JSON.stringify(data, null, 2);
+          result.className = "success";
+        } else {
+          result.textContent = "❌ 辨識錯誤：\n" + (data.message || res.statusText);
+          result.className = "error";
+        }
+      } catch (err) {
+        result.textContent = "❌ 錯誤：無法連線或上傳失敗\n" + err.message;
+        result.className = "error";
       }
     }
   </script>
