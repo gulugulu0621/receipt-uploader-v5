@@ -37,34 +37,36 @@
       }
 
       const file = fileInput.files[0];
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("token", token);
+      const reader = new FileReader();
+      reader.onload = async function () {
+        const base64 = reader.result.split(',')[1];
+        try {
+          const res = await fetch(webhookUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              token,
+              fileName: file.name,
+              base64Image: base64
+            })
+          });
 
-      try {
-        const res = await fetch(webhookUrl, {
-          method: "POST",
-          body: formData
-        });
+          if (!res.ok) throw new Error("HTTP error " + res.status);
+          const result = await res.json();
+          log.textContent = `✅ 上傳成功，回應：${JSON.stringify(result)}`;
+          log.classList.add("success");
 
-        if (!res.ok) {
-          throw new Error("HTTP error " + res.status);
+        } catch (err) {
+          if (retries > 0) {
+            log.textContent = `⚠️ 錯誤，重新嘗試中... (${3 - retries + 1})`;
+            setTimeout(() => upload(retries - 1), 1000);
+          } else {
+            log.textContent = `❌ 錯誤：無法連線或上傳失敗\n${err}`;
+            log.classList.add("error");
+          }
         }
-
-        const result = await res.json();
-        log.textContent = `✅ 上傳成功，回應：${JSON.stringify(result)}`;
-        log.classList.add("success");
-
-      } catch (err) {
-        if (retries > 0) {
-          log.textContent = `⚠️ 重新嘗試中... (${3 - retries + 1})`;
-          setTimeout(() => upload(retries - 1), 1000);
-        } else {
-          log.textContent = `❌ 錯誤：無法連線或上傳失敗
-${err}`;
-          log.classList.add("error");
-        }
-      }
+      };
+      reader.readAsDataURL(file);
     }
   </script>
 </body>
