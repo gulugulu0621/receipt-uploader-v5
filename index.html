@@ -1,56 +1,53 @@
 
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>收據上傳辨識工具</title>
+  <style>
+    body { font-family: "Microsoft JhengHei", sans-serif; padding: 2em; }
+    .success { color: green; font-weight: bold; }
+    .error { color: red; font-weight: bold; }
+  </style>
 </head>
-<body style="font-family: sans-serif; padding: 2rem;">
-  <h1>📄 收據上傳辨識工具</h1>
-  <input type="file" id="fileInput" accept="image/*" />
-  <button id="uploadBtn">🧾 上傳辨識</button>
-  <p id="result"></p>
+<body>
+  <h1>🧾 收據上傳辨識工具</h1>
+  <input type="file" id="fileInput" />
+  <button onclick="uploadFile()">📤 上傳辨識</button>
+  <p id="statusMsg"></p>
 
   <script>
-    const uploadBtn = document.getElementById("uploadBtn");
-    const result = document.getElementById("result");
-
-    uploadBtn.addEventListener("click", async () => {
+    async function uploadFile() {
       const fileInput = document.getElementById("fileInput");
-      const file = fileInput.files[0];
-      if (!file) {
-        result.textContent = "請上傳圖片開始辨識。";
-        result.style.color = "red";
+      const statusMsg = document.getElementById("statusMsg");
+      if (!fileInput.files.length) {
+        statusMsg.innerHTML = "❗ 請先選擇圖片檔案。";
+        statusMsg.className = "error";
         return;
       }
 
-      result.textContent = "⏳ 上傳中，請稍候...";
-      result.style.color = "black";
-
+      const file = fileInput.files[0];
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("token", "MY_SECURE_TOKEN_Boos58609225*");
 
       try {
-        const response = await fetch("https://guruguru.app.n8n.cloud/webhook/upload-receipt", {
+        const res = await fetch("https://guruguru.app.n8n.cloud/webhook/upload-receipt", {
           method: "POST",
-          body: formData,
+          headers: {
+            "X-TOKEN": "MY_SECURE_TOKEN_Boos58609225*"
+          },
+          body: formData
         });
 
-        const data = await response.json();
-        if (response.ok) {
-          result.textContent = `✅ 上傳成功，回應：${JSON.stringify(data)}`;
-          result.style.color = "green";
-        } else {
-          result.textContent = `❌ 錯誤：${data.message || "發生未知錯誤"}`;
-          result.style.color = "red";
-        }
+        if (!res.ok) throw new Error("回傳錯誤：" + res.status);
+        const result = await res.json();
+        statusMsg.innerHTML = `✅ 上傳成功，回應：${JSON.stringify(result)}`;
+        statusMsg.className = "success";
       } catch (error) {
-        result.textContent = `❌ 錯誤：無法連線或上傳失敗 ${error}`;
-        result.style.color = "red";
+        statusMsg.innerHTML = `❌ 錯誤：${error.message}`;
+        statusMsg.className = "error";
       }
-    });
+    }
   </script>
 </body>
 </html>
