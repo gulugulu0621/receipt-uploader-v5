@@ -1,10 +1,14 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>收據上傳辨識工具</title>
   <style>
-    body { font-family: "Microsoft JhengHei", sans-serif; padding: 2em; }
+    body { font-family: "Microsoft JhengHei", sans-serif; padding: 2rem; background: #fefefe; }
+    h1 { color: #222; }
+    input[type="file"] { margin-bottom: 1rem; }
+    .log { margin-top: 1rem; font-weight: bold; }
     .success { color: green; }
     .error { color: red; }
   </style>
@@ -12,50 +16,55 @@
 <body>
   <h1>📄 收據上傳辨識工具</h1>
   <input type="file" id="fileInput" />
+  <br />
   <button onclick="upload()">📤 上傳辨識</button>
-  <p id="result"></p>
+  <div class="log" id="log"></div>
 
   <script>
-    async function upload() {
-      const fileInput = document.getElementById('fileInput');
-      const result = document.getElementById('result');
+    const webhookUrl = "https://guruguru.app.n8n.cloud/webhook/upload-receipt";
+    const token = "Boos58609225*";
+
+    async function upload(retries = 3) {
+      const fileInput = document.getElementById("fileInput");
+      const log = document.getElementById("log");
+      log.textContent = "";
+      log.className = "log";
+
       if (!fileInput.files.length) {
-        result.textContent = '請選擇檔案';
-        result.className = 'error';
+        log.textContent = "請先選擇檔案！";
+        log.classList.add("error");
         return;
       }
 
       const file = fileInput.files[0];
-      const reader = new FileReader();
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("token", token);
 
-      reader.onload = async function () {
-        try {
-          const base64Data = reader.result.split(',')[1];
-          const response = await fetch("https://guruguru.app.n8n.cloud/webhook/upload-receipt", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              token: "MY_SECURE_TOKEN_Boos58609225*",
-              fileName: file.name,
-              fileData: base64Data
-            }),
-          });
+      try {
+        const res = await fetch(webhookUrl, {
+          method: "POST",
+          body: formData
+        });
 
-          const json = await response.json();
-          if (response.ok) {
-            result.innerHTML = `✅ 上傳成功，回應：<code>${JSON.stringify(json)}</code>`;
-            result.className = 'success';
-          } else {
-            result.innerHTML = `❌ 錯誤：${JSON.stringify(json)}`;
-            result.className = 'error';
-          }
-        } catch (error) {
-          result.textContent = '❌ 錯誤：無法連線或上傳失敗\n' + error;
-          result.className = 'error';
+        if (!res.ok) {
+          throw new Error("HTTP error " + res.status);
         }
-      };
 
-      reader.readAsDataURL(file);
+        const result = await res.json();
+        log.textContent = `✅ 上傳成功，回應：${JSON.stringify(result)}`;
+        log.classList.add("success");
+
+      } catch (err) {
+        if (retries > 0) {
+          log.textContent = `⚠️ 重新嘗試中... (${3 - retries + 1})`;
+          setTimeout(() => upload(retries - 1), 1000);
+        } else {
+          log.textContent = `❌ 錯誤：無法連線或上傳失敗
+${err}`;
+          log.classList.add("error");
+        }
+      }
     }
   </script>
 </body>
