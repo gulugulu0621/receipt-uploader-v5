@@ -3,48 +3,51 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>收據上傳辨識工具</title>
+  <title>收據上傳工具</title>
   <style>
-    body { font-family: "Noto Sans TC", sans-serif; padding: 2rem; background: #f8f9fa; }
-    h1 { font-size: 1.8rem; color: #333; }
-    .success { color: green; font-weight: bold; }
-    .error { color: red; font-weight: bold; }
+    body { font-family: "Microsoft JhengHei", sans-serif; padding: 2rem; }
+    .success { color: green; }
+    .error { color: red; }
   </style>
 </head>
 <body>
   <h1>🧾 收據上傳辨識工具</h1>
   <input type="file" id="fileInput" />
   <button onclick="upload()">📤 上傳辨識</button>
-  <pre id="result"></pre>
+  <pre id="result">請選擇圖片上傳</pre>
 
   <script>
     async function upload() {
-      const fileInput = document.getElementById('fileInput');
-      const file = fileInput.files[0];
-      const result = document.getElementById('result');
-      if (!file) {
-        result.innerHTML = '<span class="error">請上傳圖片開始辨識。</span>';
+      const fileInput = document.getElementById("fileInput");
+      const result = document.getElementById("result");
+
+      if (!fileInput.files.length) {
+        result.textContent = "⚠️ 請選擇圖片檔案";
+        result.className = "error";
         return;
       }
 
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("token", "MY_SECURE_TOKEN_Boos58609225*");
+      formData.append("file", fileInput.files[0]);
 
       try {
         const res = await fetch("https://guruguru.app.n8n.cloud/webhook/upload-receipt", {
           method: "POST",
+          headers: { "X-TOKEN": "MY_SECURE_TOKEN_Boos58609225*" },
           body: formData
         });
-        const json = await res.json();
+
+        const data = await res.json();
         if (res.ok) {
-          result.innerHTML = '<span class="success">✅ 上傳成功！回應如下：</span>
-' + JSON.stringify(json, null, 2);
+          result.textContent = "✅ 上傳成功！回應如下：\n" + JSON.stringify(data, null, 2);
+          result.className = "success";
         } else {
-          result.innerHTML = '<span class="error">❌ 錯誤：' + json.message + '</span>';
+          result.textContent = "❌ 辨識錯誤：\n" + (data.message || res.statusText);
+          result.className = "error";
         }
       } catch (err) {
-        result.innerHTML = '<span class="error">❌ 錯誤：無法連線或上傳失敗 ' + err + '</span>';
+        result.textContent = "❌ 錯誤：無法連線或上傳失敗\n" + err.message;
+        result.className = "error";
       }
     }
   </script>
