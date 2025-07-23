@@ -1,0 +1,49 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🧾 收據上傳辨識工具</title>
+</head>
+<body>
+  <h2>🧾 收據上傳辨識工具</h2>
+  <input type="file" id="fileInput" accept="image/*" />
+  <button onclick="uploadImage()">📤 上傳辨識</button>
+  <pre id="response"></pre>
+
+  <script>
+    async function uploadImage() {
+      const input = document.getElementById('fileInput');
+      const file = input.files[0];
+      if (!file) {
+        alert('請選擇圖片');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async function () {
+        const base64 = reader.result.split(',')[1];
+        const payload = {
+          token: "Boos58609225**",
+          fileName: file.name,
+          image: base64
+        };
+
+        try {
+          const res = await fetch("https://guruguru.app.n8n.cloud/webhook/upload-receipt", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          document.getElementById("response").textContent = JSON.stringify(data, null, 2);
+        } catch (err) {
+          document.getElementById("response").textContent = "❌ 發生錯誤：" + err;
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  </script>
+</body>
+</html>
